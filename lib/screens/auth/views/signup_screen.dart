@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shop/screens/auth/views/components/sign_up_form.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/auth_services.dart';
 
 import '../../../constants.dart';
 
@@ -14,6 +15,8 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     "Please enter your valid data in order to create an account.",
                   ),
                   const SizedBox(height: defaultPadding),
-                  SignUpForm(formKey: _formKey),
+                  SignUpForm(
+                    formKey: _formKey,
+                    emailController: emailController,
+                    passwordController: passwordController,
+                  ),
                   const SizedBox(height: defaultPadding),
                   Row(
                     children: [
@@ -77,11 +84,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: defaultPadding * 2),
                   ElevatedButton(
-                    onPressed: () {
-                      // There is 2 more screens while user complete their profile
-                      // afre sign up, it's available on the pro version get it now
-                      // 🔗 https://theflutterway.gumroad.com/l/fluttershop
-                      Navigator.pushNamed(context, entryPointScreenRoute);
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+
+                        final result = await AuthServices.signUpEmailPassword(emailController.text, passwordController.text);
+                        if(!context.mounted) return;
+                        if (result != 'success') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result),
+                            ),
+                          );
+                          return;
+                        }
+
+                        Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            entryPointScreenRoute,
+                            ModalRoute.withName(signUpScreenRoute));
+                      }
                     },
                     child: const Text("Continue"),
                   ),

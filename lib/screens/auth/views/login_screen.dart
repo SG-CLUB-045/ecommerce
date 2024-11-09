@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/auth_services.dart';
 
 import 'components/login_form.dart';
 
@@ -13,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Log in with your data that you intered during your registration.",
                   ),
                   const SizedBox(height: defaultPadding),
-                  LogInForm(formKey: _formKey),
+                  LogInForm(
+                    formKey: _formKey,
+                    emailController: emailController,
+                    passwordController: passwordController,
+                  ),
                   Align(
                     child: TextButton(
                       child: const Text("Forgot password"),
@@ -56,8 +63,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         : defaultPadding,
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
+
+                        final result = await AuthServices.signInEmailPassword(emailController.text, passwordController.text);
+                        if(!context.mounted) return;
+                        if (result != 'success') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result),
+                            ),
+                          );
+                          return;
+                        }
+
                         Navigator.pushNamedAndRemoveUntil(
                             context,
                             entryPointScreenRoute,
@@ -72,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account?"),
                       TextButton(
                         onPressed: () {
+
                           Navigator.pushNamed(context, signUpScreenRoute);
                         },
                         child: const Text("Sign up"),
